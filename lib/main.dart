@@ -137,26 +137,21 @@ class _CalendarPageState extends State<CalendarPage> {
 
     return Scaffold(
       backgroundColor: Colors.black,
-      body: SafeArea(
-        top: false,
-        bottom: false,
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(16, 20, 16, 20),
-          child: Column(
-            children: [
-              Align(
-                alignment: Alignment.centerLeft,
-                child: Material(
+      body: Padding(
+        padding: const EdgeInsets.fromLTRB(12, 8, 12, 8),
+        child: Column(
+          children: [
+            Row(
+              children: [
+                Material(
                   color: Colors.transparent,
                   child: InkWell(
                     key: const Key('calendarTitleButton'),
                     onTap: _goToToday,
                     borderRadius: BorderRadius.circular(12),
                     child: const Padding(
-                      padding: EdgeInsets.symmetric(
-                        horizontal: 4,
-                        vertical: 8,
-                      ),
+                      padding:
+                          EdgeInsets.symmetric(horizontal: 4, vertical: 6),
                       child: Text(
                         'Calendar',
                         style: TextStyle(
@@ -168,113 +163,135 @@ class _CalendarPageState extends State<CalendarPage> {
                     ),
                   ),
                 ),
+                const Spacer(),
+                IconButton(
+                  key: const Key('previousMonthButton'),
+                  onPressed: () => _changeMonth(-1),
+                  tooltip: 'Previous month',
+                  padding: EdgeInsets.zero,
+                  constraints: const BoxConstraints.tightFor(
+                    width: 40,
+                    height: 40,
+                  ),
+                  icon: const Icon(Icons.chevron_left, color: Colors.white),
+                ),
+                IconButton(
+                  key: const Key('nextMonthButton'),
+                  onPressed: () => _changeMonth(1),
+                  tooltip: 'Next month',
+                  padding: EdgeInsets.zero,
+                  constraints: const BoxConstraints.tightFor(
+                    width: 40,
+                    height: 40,
+                  ),
+                  icon: const Icon(Icons.chevron_right, color: Colors.white),
+                ),
+              ],
+            ),
+            const SizedBox(height: 2),
+            Align(
+              alignment: Alignment.centerLeft,
+              child: Text(
+                '${_months[month - 1]} $year',
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 26,
+                  fontWeight: FontWeight.w700,
+                ),
               ),
-              const SizedBox(height: 18),
-              Row(
-                children: [
-                  Expanded(
-                    child: Text(
-                      '${_months[month - 1]} $year',
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 28,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                  ),
-                  IconButton(
-                    key: const Key('previousMonthButton'),
-                    onPressed: () => _changeMonth(-1),
-                    tooltip: 'Previous month',
-                    icon: const Icon(Icons.chevron_left, color: Colors.white),
-                  ),
-                  IconButton(
-                    key: const Key('nextMonthButton'),
-                    onPressed: () => _changeMonth(1),
-                    tooltip: 'Next month',
-                    icon: const Icon(Icons.chevron_right, color: Colors.white),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 18),
-              Row(
-                children: _weekdays
-                    .map(
-                      (day) => Expanded(
-                        child: Center(
-                          child: Text(
-                            day,
-                            style: const TextStyle(
-                              color: Color(0xFF8A8A8A),
-                              fontSize: 12,
-                              fontWeight: FontWeight.w600,
-                            ),
+            ),
+            const SizedBox(height: 8),
+            Row(
+              children: _weekdays
+                  .map(
+                    (day) => Expanded(
+                      child: Center(
+                        child: Text(
+                          day,
+                          style: const TextStyle(
+                            color: Color(0xFF8A8A8A),
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
                           ),
                         ),
                       ),
-                    )
-                    .toList(),
-              ),
-              const SizedBox(height: 10),
-              Expanded(
-                child: GridView.builder(
-                  physics: const NeverScrollableScrollPhysics(),
-                  itemCount: 42,
-                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 7,
-                    childAspectRatio: 0.92,
-                  ),
-                  itemBuilder: (context, index) {
-                    final dayNumber = index - firstDayOffset + 1;
-                    if (dayNumber < 1 || dayNumber > daysInMonth) {
-                      return const SizedBox.shrink();
-                    }
+                    ),
+                  )
+                  .toList(),
+            ),
+            const SizedBox(height: 2),
+            Expanded(
+              child: LayoutBuilder(
+                builder: (context, constraints) {
+                  final rowHeight = constraints.maxHeight / 6;
+                  return GridView.builder(
+                    padding: EdgeInsets.zero,
+                    physics: const NeverScrollableScrollPhysics(),
+                    itemCount: 42,
+                    gridDelegate:
+                        SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: 7,
+                      mainAxisExtent: rowHeight,
+                      crossAxisSpacing: 0,
+                      mainAxisSpacing: 0,
+                    ),
+                    itemBuilder: (context, index) {
+                      final dayNumber = index - firstDayOffset + 1;
+                      if (dayNumber < 1 || dayNumber > daysInMonth) {
+                        return const SizedBox.shrink();
+                      }
 
-                    final day = DateTime(year, month, dayNumber);
-                    final selected = _isSameDay(day, _selectedDay);
-                    final today = _isToday(day);
+                      final day = DateTime(year, month, dayNumber);
+                      final selected = _isSameDay(day, _selectedDay);
+                      final today = _isToday(day);
 
-                    return Center(
-                      child: Semantics(
-                        button: true,
-                        label: '${_months[month - 1]} $dayNumber, $year',
-                        selected: selected,
-                        child: InkWell(
-                          borderRadius: BorderRadius.circular(24),
-                          onTap: () => _selectDay(day),
-                          child: Container(
-                            width: 42,
-                            height: 42,
-                            alignment: Alignment.center,
-                            decoration: BoxDecoration(
-                              color: selected ? Colors.white : Colors.transparent,
-                              shape: BoxShape.circle,
-                              border: today && !selected
-                                  ? Border.all(
-                                      color: const Color(0xFF777777),
-                                      width: 1,
-                                    )
-                                  : null,
-                            ),
-                            child: Text(
-                              '$dayNumber',
-                              style: TextStyle(
-                                color: selected ? Colors.black : Colors.white,
-                                fontSize: 15,
-                                fontWeight: selected || today
-                                    ? FontWeight.w700
-                                    : FontWeight.w400,
+                      return Center(
+                        child: Semantics(
+                          button: true,
+                          label:
+                              '${_months[month - 1]} $dayNumber, $year',
+                          selected: selected,
+                          child: InkWell(
+                            borderRadius: BorderRadius.circular(26),
+                            onTap: () => _selectDay(day),
+                            child: Container(
+                              width: 46,
+                              height: 46,
+                              alignment: Alignment.center,
+                              decoration: BoxDecoration(
+                                color: selected
+                                    ? Colors.white
+                                    : Colors.transparent,
+                                shape: BoxShape.circle,
+                                border: today && !selected
+                                    ? Border.all(
+                                        color: const Color(0xFF777777),
+                                        width: 1,
+                                      )
+                                    : null,
+                              ),
+                              child: Text(
+                                '$dayNumber',
+                                style: TextStyle(
+                                  color: selected
+                                      ? Colors.black
+                                      : Colors.white,
+                                  fontSize: 15,
+                                  fontWeight: selected || today
+                                      ? FontWeight.w700
+                                      : FontWeight.w400,
+                                ),
                               ),
                             ),
                           ),
                         ),
-                      ),
-                    );
-                  },
-                ),
+                      );
+                    },
+                  );
+                },
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );
