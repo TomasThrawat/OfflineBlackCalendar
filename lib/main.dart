@@ -1,6 +1,16 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
-void main() {
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  await SystemChrome.setPreferredOrientations(
+    const [DeviceOrientation.portraitUp],
+  );
+  await SystemChrome.setEnabledSystemUIMode(
+    SystemUiMode.immersiveSticky,
+  );
+
   runApp(const CalendarApp());
 }
 
@@ -62,15 +72,20 @@ class _CalendarPageState extends State<CalendarPage> {
     'Sun',
   ];
 
-  final _today = DateTime.now();
   late DateTime _visibleMonth;
   late DateTime _selectedDay;
+
+  DateTime _today() {
+    final now = DateTime.now();
+    return DateTime(now.year, now.month, now.day);
+  }
 
   @override
   void initState() {
     super.initState();
-    _visibleMonth = DateTime(_today.year, _today.month);
-    _selectedDay = DateTime(_today.year, _today.month, _today.day);
+    final today = _today();
+    _visibleMonth = DateTime(today.year, today.month);
+    _selectedDay = today;
   }
 
   void _changeMonth(int delta) {
@@ -100,10 +115,18 @@ class _CalendarPageState extends State<CalendarPage> {
     setState(() => _selectedDay = day);
   }
 
+  void _goToToday() {
+    final today = _today();
+    setState(() {
+      _visibleMonth = DateTime(today.year, today.month);
+      _selectedDay = today;
+    });
+  }
+
   bool _isSameDay(DateTime a, DateTime b) =>
       a.year == b.year && a.month == b.month && a.day == b.day;
 
-  bool _isToday(DateTime day) => _isSameDay(day, _today);
+  bool _isToday(DateTime day) => _isSameDay(day, _today());
 
   @override
   Widget build(BuildContext context) {
@@ -114,24 +137,39 @@ class _CalendarPageState extends State<CalendarPage> {
 
     return Scaffold(
       backgroundColor: Colors.black,
-      appBar: AppBar(
-        backgroundColor: Colors.black,
-        elevation: 0,
-        centerTitle: false,
-        title: const Text(
-          'Calendar',
-          style: TextStyle(
-            color: Colors.white,
-            fontSize: 22,
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-      ),
       body: SafeArea(
+        top: false,
+        bottom: false,
         child: Padding(
-          padding: const EdgeInsets.fromLTRB(16, 4, 16, 24),
+          padding: const EdgeInsets.fromLTRB(16, 20, 16, 20),
           child: Column(
             children: [
+              Align(
+                alignment: Alignment.centerLeft,
+                child: Material(
+                  color: Colors.transparent,
+                  child: InkWell(
+                    key: const Key('calendarTitleButton'),
+                    onTap: _goToToday,
+                    borderRadius: BorderRadius.circular(12),
+                    child: const Padding(
+                      padding: EdgeInsets.symmetric(
+                        horizontal: 4,
+                        vertical: 8,
+                      ),
+                      child: Text(
+                        'Calendar',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 22,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 18),
               Row(
                 children: [
                   Expanded(
