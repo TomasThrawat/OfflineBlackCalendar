@@ -1,4 +1,4 @@
-name: offline_black_calendar
+name: calender
 description: Minimal offline Flutter calendar with a pure black Android UI.
 publish_to: "none"
 version: 1.0.0+1
