@@ -31,31 +31,9 @@ jobs:
         run: |
           sed -i 's/android:label="[^"]*"/android:label="التقويم"/' android/app/src/main/AndroidManifest.xml
           sed -i 's#android:icon="@mipmap/ic_launcher"#android:icon="@drawable/calendar_icon"#' android/app/src/main/AndroidManifest.xml
-          sed -i 's#android:icon="@mipmap/ic_launcher"#android:icon="@drawable/calendar_icon"#' android/app/src/main/AndroidManifest.xml
-          sed -i 's#android.permission.INTERNET#d#' android/app/src/main/AndroidManifest.xml
+          sed -i '/android.permission.INTERNET/d' android/app/src/main/AndroidManifest.xml
           mkdir -p android/app/src/main/res/drawable
-          cat > android/app/src/main/res/drawable/calendar_icon.xml <<'EOF'
-<?xml version="1.0" encoding="utf-8"?>
-<vector xmlns:android="http://schemas.android.com/apk/res/android"
-    android:width="1536dp"
-    android:height="1536dp"
-    android:viewportWidth="1536"
-    android:viewportHeight="1536">
-    <path android:fillColor="#FFFFFF" android:pathData="M0,0h1536v1536h-1536z"/>
-    <path android:fillColor="#000000" android:pathData="M409,263 L1119,263 C1177,263 1224,310 1224,368 L1224,1124 C1224,1183 1177,1231 1119,1231 L409,1231 C351,1231 304,1183 304,1124 L304,368 C304,310 351,263 409,263 Z"/>
-    <path android:fillColor="#FFFFFF" android:pathData="M345,487 L1183,487 L1183,1120 C1183,1148 1160,1171 1132,1171 L396,1171 C368,1171 345,1148 345,1120 Z"/>
-    <path android:fillColor="#FFFFFF" android:pathData="M409,204 C409,181 428,162 451,162 L461,162 C484,162 503,181 503,204 L503,362 C503,385 484,404 461,404 L451,404 C428,404 409,385 409,362 Z"/>
-    <path android:fillColor="#000000" android:pathData="M431,204 C431,190 442,179 456,179 L467,179 C481,179 492,190 492,204 L492,357 C492,371 481,382 467,382 L456,382 C442,382 431,371 431,357 Z"/>
-    <path android:fillColor="#FFFFFF" android:pathData="M727,204 C727,181 746,162 769,162 L779,162 C802,162 821,181 821,204 L821,362 C821,385 802,404 779,404 L769,404 C746,404 727,385 727,362 Z"/>
-    <path android:fillColor="#000000" android:pathData="M749,204 C749,190 760,179 774,179 L785,179 C799,179 810,190 810,204 L810,357 C810,371 799,382 785,382 L774,382 C760,382 749,371 749,357 Z"/>
-    <path android:fillColor="#000000" android:pathData="M389,584h110v110h-110z"/>
-    <path android:fillColor="#000000" android:pathData="M566,584h110v110h-110z"/>
-    <path android:fillColor="#000000" android:pathData="M744,584h110v110h-110z"/>
-    <path android:fillColor="#000000" android:pathData="M389,763h110v110h-110z"/>
-    <path android:fillColor="#000000" android:pathData="M566,763h110v110h-110z"/>
-    <path android:fillColor="#000000" android:pathData="M744,763h110v110h-110z"/>
-</vector>
-EOF
+          cp assets/calendar_icon_xxxhdpi.png android/app/src/main/res/drawable/calendar_icon.png
 
       - name: Normalize analyzer configuration
         run: rm -f analysis_options.yaml
@@ -69,11 +47,11 @@ EOF
       - name: Test
         run: flutter test
 
-      - name: Verify Android identity, launcher icon, and no Internet permission
+      - name: Verify Android identity, launcher icon, package, and no Internet permission
         run: |
           grep -q 'android:label="التقويم"' android/app/src/main/AndroidManifest.xml
           grep -q 'android:icon="@drawable/calendar_icon"' android/app/src/main/AndroidManifest.xml
-          test -f android/app/src/main/res/drawable/calendar_icon.xml
+          test -f android/app/src/main/res/drawable/calendar_icon.png
           grep -R 'com.calender.black' android/app/src/main
           if grep -R "android.permission.INTERNET" android/app/src/main; then
             echo "Internet permission found in the release/main Android source."
@@ -83,9 +61,20 @@ EOF
       - name: Build release APK (arm64-v8a only)
         run: flutter build apk --release --target-platform android-arm64
 
+      - name: Verify APK architecture
+        run: |
+          set -e
+          APK=build/app/outputs/flutter-apk/app-release.apk
+          test -f "$APK"
+          unzip -l "$APK" | grep -q 'lib/arm64-v8a/'
+          if unzip -l "$APK" | grep -Eq 'lib/(armeabi-v7a|x86|x86_64)/'; then
+            echo "Non-arm64 ABI detected in APK."
+            exit 1
+          fi
+
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: offline-black-calendar-apk
+          name: offline-black-calendar-apk-arm64-v8a
           path: build/app/outputs/flutter-apk/app-release.apk
           if-no-files-found: error
