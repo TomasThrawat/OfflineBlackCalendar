@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:offline_black_calendar/main.dart';
+import 'package:calender/main.dart';
 
 void main() {
   const months = <String>[
