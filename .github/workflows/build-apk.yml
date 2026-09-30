@@ -26,7 +26,15 @@ jobs:
           cache: true
 
       - name: Generate Android platform files
-        run: flutter create . --platforms=android --project-name offline_black_calendar --org com.tomasthrawat
+        run: flutter create . --platforms=android --project-name black --org com.calender
+
+      - name: Apply Android app identity
+        run: |
+          sed -i 's/android:label="[^"]*"/android:label="التقويم"/' android/app/src/main/AndroidManifest.xml
+          sed -i 's#android:icon="@mipmap/ic_launcher"#android:icon="@mipmap/calendar_icon"#' android/app/src/main/AndroidManifest.xml
+          sed -i '/android.permission.INTERNET/d' android/app/src/main/AndroidManifest.xml
+          mkdir -p android/app/src/main/res/mipmap-xxxhdpi
+          cp assets/calendar_icon_xxxhdpi.png android/app/src/main/res/mipmap-xxxhdpi/calendar_icon.png
 
       - name: Normalize analyzer configuration
         run: rm -f analysis_options.yaml
@@ -40,10 +48,13 @@ jobs:
       - name: Test
         run: flutter test
 
-      - name: Verify release has no Internet permission
+      - name: Verify Android identity and no Internet permission
         run: |
+          grep -q 'android:label="التقويم"' android/app/src/main/AndroidManifest.xml
+          grep -q 'android:icon="@mipmap/calendar_icon"' android/app/src/main/AndroidManifest.xml
+          grep -R 'com.calender.black' android/app/src/main
           if grep -R "android.permission.INTERNET" android/app/src/main; then
-            echo "Internet permission found in the release/main manifest."
+            echo "Internet permission found in the release/main Android source."
             exit 1
           fi
 

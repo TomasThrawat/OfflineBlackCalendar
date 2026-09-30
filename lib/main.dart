@@ -21,7 +21,7 @@ class CalendarApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      title: 'Calendar',
+      title: 'التقويم',
       theme: ThemeData(
         brightness: Brightness.dark,
         scaffoldBackgroundColor: Colors.black,
@@ -153,7 +153,7 @@ class _CalendarPageState extends State<CalendarPage> {
                       padding:
                           EdgeInsets.symmetric(horizontal: 4, vertical: 6),
                       child: Text(
-                        'Calendar',
+                        'التقويم',
                         style: TextStyle(
                           color: Colors.white,
                           fontSize: 22,
